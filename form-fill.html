@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Form Fill - TSP</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#1a6b3c;--primary-dark:#0d4a25;--primary-light:#e8f5e9;--danger:#dc3545;--success:#28a745;--bg:#f0f2f5;--card:#fff;--text:#333;--text-light:#666;--border:#e0e0e0;--shadow:0 2px 12px rgba(0,0,0,0.08);--radius:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0d4a25 0%,#1a6b3c 50%,#2d8f4e 100%);min-height:100vh;padding:20px;display:flex;align-items:center;justify-content:center}
+.form-card{background:#fff;border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,0.3);padding:30px 24px;width:100%;max-width:500px;display:none}
+.header{text-align:center;margin-bottom:24px}
+.logo{width:70px;height:70px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:34px;color:#fff;box-shadow:0 8px 25px rgba(26,107,60,0.4)}
+.header h1{font-size:20px;font-weight:800;color:var(--primary-dark);margin-bottom:4px}
+.header p{font-size:13px;color:var(--text-light)}
+.desc{background:var(--primary-light);border-radius:12px;padding:14px;margin-bottom:20px;font-size:13px;color:var(--primary-dark);border-left:4px solid var(--primary);display:none}
+.qbox{border:2px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;background:#fff}
+.qnum{font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:var(--primary);margin-bottom:8px;display:block}
+.qtext{font-size:15px;font-weight:600;color:var(--text);margin-bottom:10px}
+.qimg{width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin:10px 0;border:1px solid var(--border);display:block;margin-left:auto;margin-right:auto}
+.qtype{font-size:12px;color:var(--text-light);margin-bottom:8px;display:block}
+.fg{margin-bottom:12px}
+.fg label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;display:block}
+.fg input,.fg textarea,.fg select{width:100%;padding:12px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;background:#f8f9fa}
+.fg input:focus,.fg textarea:focus,.fg select:focus{outline:none;border-color:var(--primary);background:#fff}
+.opt{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:10px;border:1px solid var(--border);border-radius:10px;background:#f8f9fa;cursor:pointer}
+.opt input{margin:0;width:auto;flex-shrink:0}
+.opt span{flex:1;font-size:14px;color:var(--text)}
+.btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px}
+.btn:active{transform:scale(0.98)}
+.btn:disabled{opacity:.7;cursor:not-allowed}
+.ok{color:var(--success);font-size:14px;text-align:center;margin-top:14px;display:none;font-weight:600}
+.err{color:var(--danger);font-size:13px;text-align:center;margin-top:10px;display:none;font-weight:500}
+.ld{display:none;text-align:center;padding:20px}
+.spin{width:40px;height:40px;border:4px solid var(--border);border-top:4px solid var(--primary);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 10px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.notfound{text-align:center;padding:40px;color:var(--text-light);display:none}
+.notfound i{font-size:50px;color:var(--border);margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="ld" id="loading"><div class="spin"></div><p>Form load ho raha hai...</p></div>
+<div class="form-card" id="card">
+<div class="header">
+<div class="logo"><i class="fas fa-clipboard-list"></i></div>
+<h1 id="formTitle">Form</h1>
+<p id="formSubtitle">TSP Form</p>
+</div>
+<div class="desc" id="formDesc"></div>
+<form id="formEl">
+<div id="questionsArea"></div>
+<button class="btn" type="submit" id="submitBtn"><i class="fas fa-paper-plane"></i> Form Submit Karein</button>
+</form>
+<div class="ok" id="success">Form safaltapurvak submit ho gaya! Dhanyavad.</div>
+<div class="err" id="error"></div>
+</div>
+<div class="notfound" id="notfound">
+<i class="fas fa-exclamation-circle"></i>
+<h2 style="color:var(--text);margin-bottom:8px">Form mila nahi</h2>
+<p>Ye link galat hai ya form delete ho chuka hai.</p>
+<button class="btn" style="width:auto;display:inline-block;margin-top:16px" onclick="window.location.hash=''">Wapas jayein</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+const FC={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.appspot.com",messagingSenderId:"489310613218",appId:"1:489310613218:web:e44e61cf16d4b8c106729d"};
+if(!firebase.apps.length)firebase.initializeApp(FC);
+const db=firebase.firestore();
+
+const card=document.getElementById("card");
+const notfound=document.getElementById("notfound");
+const loading=document.getElementById("loading");
+const qArea=document.getElementById("questionsArea");
+const formEl=document.getElementById("formEl");
+const succ=document.getElementById("success");
+const err=document.getElementById("error");
+const btn=document.getElementById("submitBtn");
+
+function getFormId(){
+const h=window.location.hash;
+return h?h.replace("#",""):"";
+}
+
+function adjustColor(hex,amt){
+let usePound=false;
+if(hex[0]=="#"){hex=hex.slice(1);usePound=true;}
+let num=parseInt(hex,16);
+let r=(num>>16)&0xFF,g=(num>>8)&0xFF,b=num&0xFF;
+r=Math.max(0,Math.min(255,r+amt));g=Math.max(0,Math.min(255,g+amt));b=Math.max(0,Math.min(255,b+amt));
+return (usePound?"#":"")+(r<<16|g<<8|b).toString(16).padStart(6,"0");
+}
+function escapeHtml(t){const d=document.createElement("div");d.textContent=t;return d.innerHTML;}
+
+async function loadForm(){
+const formId=getFormId();
+card.style.display="none";
+notfound.style.display="none";
+loading.style.display="block";
+succ.style.display="none";
+err.style.display="none";
+formEl.style.display="block";
+btn.style.display="block";
+btn.disabled=false;
+qArea.innerHTML="";
+// remove old dynamic images
+card.querySelectorAll('img[data-dyn="1"]').forEach(el=>el.remove());
+
+if(!formId){loading.style.display="none";notfound.style.display="block";return;}
+
+try{
+let d=null;
+// 1) localStorage
+try{
+  const local=JSON.parse(localStorage.getItem("tsp_forms")||"[]");
+  d=local.find(f=>f.id===formId)||null;
+}catch(e){}
+// 2) Firebase fallback
+if(!d){
+  try{
+    const doc=await db.collection("forms").doc(formId).get();
+    if(doc.exists) d={id:doc.id,...doc.data()};
+  }catch(e){}
+}
+if(!d){loading.style.display="none";notfound.style.display="block";return;}
+
+document.getElementById("formTitle").textContent=d.title||"Form";
+document.getElementById("formSubtitle").textContent=d.description||"TSP Form";
+document.getElementById("formDesc").textContent=d.description||"";
+document.getElementById("formDesc").style.display=d.description?"block":"none";
+
+// Apply form color
+const formColor=d.formColor||"#1a6b3c";
+document.documentElement.style.setProperty("--primary",formColor);
+document.documentElement.style.setProperty("--primary-dark",adjustColor(formColor,-20));
+document.documentElement.style.setProperty("--primary-light",adjustColor(formColor,60));
+
+// Header image
+if(d.headerImg){
+const hd=document.createElement("img");
+hd.src=d.headerImg;
+hd.className="qimg";
+hd.alt="Form header";
+hd.setAttribute("data-dyn","1");
+hd.onerror=function(){this.style.display="none";};
+document.getElementById("formDesc").insertAdjacentElement("afterend",hd);
+}
+
+let html="";
+(d.questions||[]).forEach((q,i)=>{
+html+=`<div class="qbox"><span class="qnum">Sawal ${i+1}</span><div class="qtext">${escapeHtml(q.text)}</div>`;
+if(q.img){html+=`<img class="qimg" src="${escapeHtml(q.img)}" alt="Question image" onerror="this.style.display='none'">`;}
+html+=`<div class="qtype">${q.type==="text"?"Short Answer":q.type==="paragraph"?"Long Answer":"Multiple Choice"}</div>`;
+if(q.type==="text"){html+=`<div class="fg"><input type="text" name="a${i}" placeholder="Apna jawab likhein" required></div>`;}
+else if(q.type==="paragraph"){html+=`<div class="fg"><textarea name="a${i}" rows="3" placeholder="Apna jawab likhein" required></textarea></div>`;}
+else if(q.type==="multiple"){
+(q.options||[]).forEach((opt,oi)=>{
+html+=`<label class="opt"><input type="radio" name="a${i}" value="${escapeHtml(opt)}" required> <span>${escapeHtml(opt)}</span></label>`;
+});
+}
+html+=`</div>`;
+});
+qArea.innerHTML=html;
+
+// Footer image (neeche ki side)
+if(d.footerImg){
+const fd=document.createElement("img");
+fd.src=d.footerImg;
+fd.className="qimg";
+fd.alt="Form footer";
+fd.setAttribute("data-dyn","1");
+fd.style.marginTop="16px";
+fd.onerror=function(){this.style.display="none";};
+qArea.insertAdjacentElement("afterend",fd);
+}
+
+loading.style.display="none";
+card.style.display="block";
+}catch(e){loading.style.display="none";notfound.style.display="block";console.error(e);}
+}
+
+async function submitForm(e){
+e.preventDefault();
+btn.disabled=true;
+err.style.display="none";
+const formId=getFormId();
+const formData=new FormData(formEl);
+const answers={};
+for(let [k,v] of formData.entries())answers[k]=v;
+const sub={formId,formTitle:document.getElementById("formTitle").textContent||"Form",answers,submittedAt:new Date().toISOString(),source:"public_form_link"};
+// localStorage first (guaranteed)
+try{ let subs=JSON.parse(localStorage.getItem("tsp_form_subs")||"[]"); subs.push(sub); localStorage.setItem("tsp_form_subs",JSON.stringify(subs)); }catch(e){}
+try{ await db.collection("form_submissions").add(sub); }catch(e2){ console.log("fb err",e2); }
+formEl.style.display="none";
+btn.style.display="none";
+succ.style.display="block";
+}
+
+formEl.onsubmit=submitForm;
+
+// Handle hash change (navigate between form links without reload)
+window.addEventListener("hashchange",()=>{loadForm();});
+window.onload=loadForm;
+</script>
+</body>
+</html>
