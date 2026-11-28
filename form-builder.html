@@ -215,7 +215,6 @@ function addQuestion(q=null){
         <select class="select qTypeSel">
           <option value="text">Short Text</option>
           <option value="paragraph">Long Text / Paragraph</option>
-          <option value="number">Number (Max 10 digits)</option>
           <option value="multiple">Multiple Choice</option>
         </select>
       </div>
@@ -354,7 +353,12 @@ async function loadForms(){
   list.innerHTML='<div class="empty"><i class="fas fa-spinner fa-spin"></i>Loading...</div>';
   try{
     let forms=getLocalForms();
-    try{ const snap=await db.collection('forms').where('createdBy','==',CU.id||CU.uid).orderBy('createdAt','desc').get(); snap.forEach(doc=>{ if(!forms.find(f=>f.id===doc.id)) forms.push({id:doc.id,...doc.data()}); }); }catch(e){}
+    try{
+      let snap;
+      try{ snap=await db.collection('forms').where('createdBy','==',CU.id||CU.uid).orderBy('createdAt','desc').get(); }
+      catch(e){ snap=await db.collection('forms').where('createdBy','==',CU.id||CU.uid).get(); }
+      snap.forEach(doc=>{ if(!forms.find(f=>f.id===doc.id)) forms.push({id:doc.id,...doc.data()}); });
+    }catch(e){}
     forms.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));
     allFormsCache=forms;
     if(!forms.length){ list.innerHTML='<div class="empty"><i class="fas fa-inbox"></i>Abhi tak koi form nahi banaya gaya</div>'; return; }
