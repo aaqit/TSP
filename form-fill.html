@@ -123,6 +123,7 @@ function renderForm(d){
     if(q.img) html+=`<img class="qimg" src="${esc(q.img)}" onerror="this.style.display='none'" alt="question image">`;
     if(q.type==='text') html+=`<input class="input" name="a${i}" placeholder="Apna jawab likhein..." required>`;
     else if(q.type==='paragraph') html+=`<textarea class="textarea" name="a${i}" placeholder="Apna jawab likhein..." required></textarea>`;
+     else if(q.type==='number') html+=`<input class="input" type="text" inputmode="numeric" maxlength="10" pattern="[0-9]{1,10}" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)" name="a${i}" placeholder="Sirf number (max 10 digit)" required>`; 
     else if(q.type==='multiple'){ (q.options||[]).forEach(opt=>{ html+=`<label class="opt"><input type="radio" name="a${i}" value="${esc(opt)}" required><span>${esc(opt)}</span></label>`; }); }
     html+=`</div>`;
   });
