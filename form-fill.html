@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Form - TSP</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--p:#4f6df5;--pd:#3b5bdb;--pl:#eef2ff;--bg:#f4f7fb;--card:#fff;--text:#1f2937;--muted:#6b7280;--border:#e5e9f2;--danger:#ef4444;--ok:#10b981;--shadow:0 8px 30px rgba(15,23,42,.08);--r:16px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px 16px}
+.shell{max-width:760px;margin:0 auto}
+.hero{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.hero-bar{height:10px;background:linear-gradient(90deg,var(--p),var(--pd))}
+.hero-body{padding:28px}
+.hero h1{font-size:30px;line-height:1.2;margin-bottom:8px;color:#111827}
+.hero p{color:var(--muted);font-size:15px;line-height:1.6}
+.hero-img{width:100%;max-height:320px;object-fit:cover;display:block;border-bottom:1px solid var(--border)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 2px 12px rgba(15,23,42,.04);padding:24px;margin-bottom:14px}
+.qnum{display:inline-block;font-size:12px;font-weight:800;color:var(--p);background:var(--pl);padding:4px 10px;border-radius:999px;margin-bottom:10px}
+.qtext{font-size:17px;font-weight:600;margin-bottom:14px;line-height:1.5}
+.qimg{width:100%;max-height:280px;object-fit:cover;border-radius:12px;border:1px solid var(--border);margin-bottom:14px;display:block}
+.input,.textarea{width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:10px;font-size:15px;font-family:inherit;background:#fbfcff}
+.input:focus,.textarea:focus{outline:none;border-color:var(--p);box-shadow:0 0 0 4px rgba(79,109,245,.12);background:#fff}
+.textarea{min-height:120px;resize:vertical}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;cursor:pointer;background:#fbfcff}
+.opt:hover{border-color:#c7d2fe;background:#f8faff}
+.opt input{margin-top:3px;accent-color:var(--p)}
+.opt span{font-size:15px;line-height:1.5}
+.submit-bar{display:flex;gap:12px;align-items:center;margin-top:8px}
+.btn{background:var(--p);color:#fff;border:none;border-radius:10px;padding:14px 22px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{background:var(--pd)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.note{color:var(--muted);font-size:13px}
+.success{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:40px 28px;text-align:center;display:none}
+.success .icon{width:72px;height:72px;border-radius:50%;background:#ecfdf5;color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 16px}
+.success h2{font-size:28px;margin-bottom:8px;color:#111827}
+.success p{color:var(--muted);font-size:16px;line-height:1.6}
+.state{background:#fff;border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);padding:40px 24px;text-align:center;color:var(--muted)}
+.state i{font-size:40px;color:#cbd5e1;display:block;margin-bottom:12px}
+.footer-img{width:100%;max-height:280px;object-fit:cover;border-radius:var(--r);border:1px solid var(--border);margin-top:16px;display:block}
+@media(max-width:600px){body{padding:14px 10px}.hero-body{padding:22px 18px}.hero h1{font-size:24px}.card{padding:18px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div id="loading" class="state"><i class="fas fa-spinner fa-spin"></i>Form load ho raha hai...</div>
+
+  <div id="notFound" class="state" style="display:none">
+    <i class="fas fa-file-circle-xmark"></i>
+    <h2 style="color:#111827;margin-bottom:8px">Form nahi mila</h2>
+    <p>Ye link galat hai ya form delete ho chuka hai.</p>
+  </div>
+
+  <div id="formWrap" style="display:none">
+    <div class="hero">
+      <img id="headerImgEl" class="hero-img" style="display:none" alt="Header">
+      <div class="hero-bar"></div>
+      <div class="hero-body">
+        <img id="logoImgEl" style="display:none;width:72px;height:72px;object-fit:contain;border-radius:14px;border:1px solid var(--border);background:#fff;margin-bottom:14px" alt="Logo">
+        <h1 id="formTitle">Form</h1>
+        <p id="formDesc"></p>
+      </div>
+    </div>
+
+    <form id="formEl">
+      <div id="questionsArea"></div>
+      <div class="submit-bar">
+        <button class="btn" type="submit" id="submitBtn"><i class="fas fa-paper-plane"></i> Submit</button>
+        <span class="note">Aapka jawab securely record hoga.</span>
+      </div>
+    </form>
+
+    <img id="footerImgEl" class="footer-img" style="display:none" alt="Footer">
+  </div>
+
+  <div id="success" class="success">
+    <div class="icon"><i class="fas fa-check"></i></div>
+    <h2>Thank You!</h2>
+    <p id="successMsg">Aapka form safaltapurvak submit ho gaya.</p>
+  </div>
+</div>
+
+<script>
+const FC={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.appspot.com",messagingSenderId:"489310613218",appId:"1:489310613218:web:e44e61cf16d4b8c106729d"};
+let db=null, _fbReady=null;
+function ensureFirebase(){
+  if(db) return Promise.resolve(db);
+  if(_fbReady) return _fbReady;
+  _fbReady=new Promise((resolve)=>{
+    const s1=document.createElement('script'); s1.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+    s1.onload=()=>{ const s2=document.createElement('script'); s2.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js';
+      s2.onload=()=>{ try{ if(!firebase.apps.length) firebase.initializeApp(FC); db=firebase.firestore(); }catch(e){} resolve(db); };
+      s2.onerror=()=>resolve(null); document.head.appendChild(s2);
+    };
+    s1.onerror=()=>resolve(null); document.head.appendChild(s1);
+  });
+  return _fbReady;
+}
+function withTimeout(p,ms){ return Promise.race([p,new Promise(r=>setTimeout(()=>r(null),ms))]); }
+let currentForm=null;
+
+function getFormId(){ const h=location.hash; return h?h.replace('#','').trim():''; }
+function esc(t){const d=document.createElement('div'); d.textContent=t==null?'':String(t); return d.innerHTML;}
+function shade(hex,amt){let c=hex.replace('#','');if(c.length===3)c=c.split('').map(x=>x+x).join('');let n=parseInt(c,16);let r=(n>>16)+amt,g=((n>>8)&0xff)+amt,b=(n&0xff)+amt;r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');}
+
+function renderForm(d){
+  currentForm=d;
+  const p=d.formColor||'#4f6df5';
+  document.documentElement.style.setProperty('--p',p);
+  document.documentElement.style.setProperty('--pd',shade(p,-20));
+  document.documentElement.style.setProperty('--pl',shade(p,140));
+  document.getElementById('formTitle').textContent=d.title||'Untitled Form';
+  const desc=document.getElementById('formDesc'); desc.textContent=d.description||''; desc.style.display=d.description?'block':'none';
+  const logo=document.getElementById('logoImgEl'); if(d.logoImg){logo.src=d.logoImg;logo.style.display='block';logo.onerror=()=>logo.style.display='none';} else logo.style.display='none';
+  const h=document.getElementById('headerImgEl'); if(d.headerImg){h.src=d.headerImg;h.style.display='block';h.onerror=()=>h.style.display='none';} else h.style.display='none';
+  const f=document.getElementById('footerImgEl'); if(d.footerImg){f.src=d.footerImg;f.style.display='block';f.onerror=()=>f.style.display='none';} else f.style.display='none';
+  const area=document.getElementById('questionsArea');
+  let html='';
+  (d.questions||[]).forEach((q,i)=>{
+    html+=`<div class="card"><span class="qnum">Sawal ${i+1}</span><div class="qtext">${esc(q.text)}</div>`;
+    if(q.img) html+=`<img class="qimg" src="${esc(q.img)}" onerror="this.style.display='none'" alt="question image">`;
+    if(q.type==='text') html+=`<input class="input" name="a${i}" placeholder="Apna jawab likhein..." required>`;
+    else if(q.type==='paragraph') html+=`<textarea class="textarea" name="a${i}" placeholder="Apna jawab likhein..." required></textarea>`;
+    else if(q.type==='number') html+=`<input class="input" type="text" inputmode="numeric" maxlength="10" pattern="[0-9]{1,10}" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)" name="a${i}" placeholder="Sirf number (max 10 digit)" required>`;
+    else if(q.type==='multiple'){ (q.options||[]).forEach(opt=>{ html+=`<label class="opt"><input type="radio" name="a${i}" value="${esc(opt)}" required><span>${esc(opt)}</span></label>`; }); }
+    html+=`</div>`;
+  });
+  area.innerHTML=html;
+  document.getElementById('loading').style.display='none';
+  document.getElementById('formWrap').style.display='block';
+}
+
+async function loadForm(){
+  const loading=document.getElementById('loading');
+  const nf=document.getElementById('notFound');
+  const wrap=document.getElementById('formWrap');
+  const success=document.getElementById('success');
+  loading.style.display='block'; nf.style.display='none'; wrap.style.display='none'; success.style.display='none';
+  const formId=getFormId();
+  if(!formId){ loading.style.display='none'; nf.style.display='block'; return; }
+  let d=null;
+  try{ const local=JSON.parse(localStorage.getItem('tsp_forms')||'[]'); d=local.find(f=>f.id===formId)||null; }catch(e){}
+  if(d){ renderForm(d); return; }
+  // not in localStorage - try Firebase with timeout
+  const _db=await withTimeout(ensureFirebase(), 6000);
+  if(_db){ try{ const doc=await withTimeout(_db.collection('forms').doc(formId).get(), 6000); if(doc&&doc.exists) d={id:doc.id,...doc.data()}; }catch(e){} }
+  if(!d){ loading.style.display='none'; nf.style.display='block'; return; }
+  renderForm(d);
+}
+
+let _submitting=false;
+document.getElementById('formEl').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  if(_submitting) return; _submitting=true;
+  const btn=document.getElementById('submitBtn'); btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submit ho raha hai...';
+  const fd=new FormData(e.target); const answers={};
+  for(const [k,v] of fd.entries()) answers[k]=v;
+  const formId=getFormId();
+  const subId='sub_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  const questionLabels=(currentForm&&currentForm.questions)?currentForm.questions.map((q,i)=>q.text||('Sawal '+(i+1))):[];
+  const sub={submissionId:subId,formId,formTitle:currentForm?currentForm.title:'Form',questionLabels,answers,submittedAt:new Date().toISOString(),source:'public_form'};
+  try{ let subs=JSON.parse(localStorage.getItem('tsp_form_subs')||'[]'); subs.push(sub); localStorage.setItem('tsp_form_subs',JSON.stringify(subs)); }catch(err){}
+  try{ const _db=await withTimeout(ensureFirebase(), 5000); if(_db) await withTimeout(_db.collection('form_submissions').doc(subId).set(sub,{merge:true}), 5000); }catch(err){}
+  document.getElementById('formWrap').style.display='none';
+  document.getElementById('successMsg').textContent=(currentForm&&currentForm.successMsg)?currentForm.successMsg:'Aapka form safaltapurvak submit ho gaya. Dhanyavad!';
+  document.getElementById('success').style.display='block';
+});
+
+window.addEventListener('hashchange', loadForm);
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', loadForm); else loadForm();
+</script>
+</body>
+</html>
