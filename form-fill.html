@@ -82,17 +82,54 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
 const FC={apiKey:"AIzaSyBx7UCuhxtgXIKmh9ocGUN_MQktsIN610M",authDomain:"information-1d471.firebaseapp.com",projectId:"information-1d471",storageBucket:"information-1d471.appspot.com",messagingSenderId:"489310613218",appId:"1:489310613218:web:e44e61cf16d4b8c106729d"};
-if(!firebase.apps.length)firebase.initializeApp(FC);
-const db=firebase.firestore();
+let db=null, _fbReady=null;
+function ensureFirebase(){
+  if(db) return Promise.resolve(db);
+  if(_fbReady) return _fbReady;
+  _fbReady=new Promise((resolve)=>{
+    const s1=document.createElement('script'); s1.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+    s1.onload=()=>{ const s2=document.createElement('script'); s2.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js';
+      s2.onload=()=>{ try{ if(!firebase.apps.length) firebase.initializeApp(FC); db=firebase.firestore(); }catch(e){} resolve(db); };
+      s2.onerror=()=>resolve(null); document.head.appendChild(s2);
+    };
+    s1.onerror=()=>resolve(null); document.head.appendChild(s1);
+  });
+  return _fbReady;
+}
+function withTimeout(p,ms){ return Promise.race([p,new Promise(r=>setTimeout(()=>r(null),ms))]); }
 let currentForm=null;
 
 function getFormId(){ const h=location.hash; return h?h.replace('#','').trim():''; }
 function esc(t){const d=document.createElement('div'); d.textContent=t==null?'':String(t); return d.innerHTML;}
 function shade(hex,amt){let c=hex.replace('#','');if(c.length===3)c=c.split('').map(x=>x+x).join('');let n=parseInt(c,16);let r=(n>>16)+amt,g=((n>>8)&0xff)+amt,b=(n&0xff)+amt;r=Math.max(0,Math.min(255,r));g=Math.max(0,Math.min(255,g));b=Math.max(0,Math.min(255,b));return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');}
+
+function renderForm(d){
+  currentForm=d;
+  const p=d.formColor||'#4f6df5';
+  document.documentElement.style.setProperty('--p',p);
+  document.documentElement.style.setProperty('--pd',shade(p,-20));
+  document.documentElement.style.setProperty('--pl',shade(p,140));
+  document.getElementById('formTitle').textContent=d.title||'Untitled Form';
+  const desc=document.getElementById('formDesc'); desc.textContent=d.description||''; desc.style.display=d.description?'block':'none';
+  const logo=document.getElementById('logoImgEl'); if(d.logoImg){logo.src=d.logoImg;logo.style.display='block';logo.onerror=()=>logo.style.display='none';} else logo.style.display='none';
+  const h=document.getElementById('headerImgEl'); if(d.headerImg){h.src=d.headerImg;h.style.display='block';h.onerror=()=>h.style.display='none';} else h.style.display='none';
+  const f=document.getElementById('footerImgEl'); if(d.footerImg){f.src=d.footerImg;f.style.display='block';f.onerror=()=>f.style.display='none';} else f.style.display='none';
+  const area=document.getElementById('questionsArea');
+  let html='';
+  (d.questions||[]).forEach((q,i)=>{
+    html+=`<div class="card"><span class="qnum">Sawal ${i+1}</span><div class="qtext">${esc(q.text)}</div>`;
+    if(q.img) html+=`<img class="qimg" src="${esc(q.img)}" onerror="this.style.display='none'" alt="question image">`;
+    if(q.type==='text') html+=`<input class="input" name="a${i}" placeholder="Apna jawab likhein..." required>`;
+    else if(q.type==='paragraph') html+=`<textarea class="textarea" name="a${i}" placeholder="Apna jawab likhein..." required></textarea>`;
+    else if(q.type==='multiple'){ (q.options||[]).forEach(opt=>{ html+=`<label class="opt"><input type="radio" name="a${i}" value="${esc(opt)}" required><span>${esc(opt)}</span></label>`; }); }
+    html+=`</div>`;
+  });
+  area.innerHTML=html;
+  document.getElementById('loading').style.display='none';
+  document.getElementById('formWrap').style.display='block';
+}
 
 async function loadForm(){
   const loading=document.getElementById('loading');
@@ -104,35 +141,12 @@ async function loadForm(){
   if(!formId){ loading.style.display='none'; nf.style.display='block'; return; }
   let d=null;
   try{ const local=JSON.parse(localStorage.getItem('tsp_forms')||'[]'); d=local.find(f=>f.id===formId)||null; }catch(e){}
-  if(!d){ try{ const doc=await db.collection('forms').doc(formId).get(); if(doc.exists) d={id:doc.id,...doc.data()}; }catch(e){} }
+  if(d){ renderForm(d); return; }
+  // not in localStorage - try Firebase with timeout
+  const _db=await withTimeout(ensureFirebase(), 6000);
+  if(_db){ try{ const doc=await withTimeout(_db.collection('forms').doc(formId).get(), 6000); if(doc&&doc.exists) d={id:doc.id,...doc.data()}; }catch(e){} }
   if(!d){ loading.style.display='none'; nf.style.display='block'; return; }
-  currentForm=d;
-
-  const p=d.formColor||'#4f6df5';
-  document.documentElement.style.setProperty('--p',p);
-  document.documentElement.style.setProperty('--pd',shade(p,-20));
-  document.documentElement.style.setProperty('--pl',shade(p,140));
-
-  document.getElementById('formTitle').textContent=d.title||'Untitled Form';
-  const desc=document.getElementById('formDesc'); desc.textContent=d.description||''; desc.style.display=d.description?'block':'none';
-  const logo=document.getElementById('logoImgEl'); if(d.logoImg){logo.src=d.logoImg;logo.style.display='block';logo.onerror=()=>logo.style.display='none';} else logo.style.display='none';
-  const h=document.getElementById('headerImgEl'); if(d.headerImg){h.src=d.headerImg;h.style.display='block';h.onerror=()=>h.style.display='none';} else h.style.display='none';
-  const f=document.getElementById('footerImgEl'); if(d.footerImg){f.src=d.footerImg;f.style.display='block';f.onerror=()=>f.style.display='none';} else f.style.display='none';
-
-  const area=document.getElementById('questionsArea');
-  let html='';
-  (d.questions||[]).forEach((q,i)=>{
-    html+=`<div class="card"><span class="qnum">Sawal ${i+1}</span><div class="qtext">${esc(q.text)}</div>`;
-    if(q.img) html+=`<img class="qimg" src="${esc(q.img)}" onerror="this.style.display='none'" alt="question image">`;
-    if(q.type==='text') html+=`<input class="input" name="a${i}" placeholder="Apna jawab likhein..." required>`;
-    else if(q.type==='paragraph') html+=`<textarea class="textarea" name="a${i}" placeholder="Apna jawab likhein..." required></textarea>`;
-    else if(q.type==='multiple'){
-      (q.options||[]).forEach(opt=>{ html+=`<label class="opt"><input type="radio" name="a${i}" value="${esc(opt)}" required><span>${esc(opt)}</span></label>`; });
-    }
-    html+=`</div>`;
-  });
-  area.innerHTML=html;
-  loading.style.display='none'; wrap.style.display='block';
+  renderForm(d);
 }
 
 let _submitting=false;
@@ -147,14 +161,14 @@ document.getElementById('formEl').addEventListener('submit', async (e)=>{
   const questionLabels=(currentForm&&currentForm.questions)?currentForm.questions.map((q,i)=>q.text||('Sawal '+(i+1))):[];
   const sub={submissionId:subId,formId,formTitle:currentForm?currentForm.title:'Form',questionLabels,answers,submittedAt:new Date().toISOString(),source:'public_form'};
   try{ let subs=JSON.parse(localStorage.getItem('tsp_form_subs')||'[]'); subs.push(sub); localStorage.setItem('tsp_form_subs',JSON.stringify(subs)); }catch(err){}
-  try{ await db.collection('form_submissions').doc(subId).set(sub,{merge:true}); }catch(err){}
+  try{ const _db=await withTimeout(ensureFirebase(), 5000); if(_db) await withTimeout(_db.collection('form_submissions').doc(subId).set(sub,{merge:true}), 5000); }catch(err){}
   document.getElementById('formWrap').style.display='none';
   document.getElementById('successMsg').textContent=(currentForm&&currentForm.successMsg)?currentForm.successMsg:'Aapka form safaltapurvak submit ho gaya. Dhanyavad!';
   document.getElementById('success').style.display='block';
 });
 
 window.addEventListener('hashchange', loadForm);
-window.onload=loadForm;
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', loadForm); else loadForm();
 </script>
 </body>
 </html>
