@@ -89,7 +89,7 @@ async function load(){
   document.getElementById('tableWrap').innerHTML='<div class="empty"><i class="fas fa-spinner fa-spin"></i>Loading...</div>';
   try{
     const [fsnap,ssnap]=await Promise.all([
-      db.collection('forms').where('createdBy','==',CU.id||CU.uid).orderBy('createdAt','desc').get().catch(()=>({forEach(){}})),
+      (async()=>{ try{ return await db.collection('forms').where('createdBy','==',CU.id||CU.uid).orderBy('createdAt','desc').get(); }catch(e){ try{ return await db.collection('forms').where('createdBy','==',CU.id||CU.uid).get(); }catch(e2){ return {forEach(){}}; } } })(),
       db.collection('form_submissions').orderBy('submittedAt','desc').get().catch(()=>({forEach(){}}))
     ]);
     allForms=[]; if(fsnap&&fsnap.forEach) fsnap.forEach(doc=>allForms.push({id:doc.id,...doc.data()}));
