@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>TSP Feedback Form</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:linear-gradient(135deg,#eef2ff 0%,#f5f7fb 45%,#e8eeff 100%); min-height:100vh; padding:20px; display:flex; align-items:center; justify-content:center; }
+.card { background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.3); padding:28px 22px; width:100%; max-width:480px; display:none; }
+.header { text-align:center; margin-bottom:24px; }
+.logo { width:70px; height:70px; background:linear-gradient(135deg,#4f6df5,#3b5bdb); border-radius:18px; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; font-size:34px; color:#fff; }
+.header h1 { font-size:20px; font-weight:800; color:#3b5bdb; margin-bottom:4px; }
+.header p { font-size:13px; color:#666; }
+.desc { background:#eef2ff; border-radius:12px; padding:14px; margin-bottom:20px; font-size:13px; color:#1e40af; border-left:4px solid #4f6df5; display:none; }
+.qbox { border:2px solid #e0e0e0; border-radius:12px; padding:16px; margin-bottom:16px; background:#fff; }
+.qnum { font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:800; color:#4f6df5; margin-bottom:8px; display:block; }
+.qtext { font-size:15px; font-weight:600; color:#333; margin-bottom:10px; }
+.qimg { width:100%; max-height:200px; object-fit:cover; border-radius:10px; margin:10px 0; border:1px solid #e0e0e0; display:block; margin-left:auto; margin-right:auto; }
+.qtype { font-size:12px; color:#666; margin-bottom:8px; display:block; }
+.fg { margin-bottom:12px; }
+.fg label { font-size:13px; font-weight:600; color:#333; margin-bottom:6px; display:block; }
+.fg input,.fg textarea,.fg select { width:100%; padding:12px; border:2px solid #e0e0e0; border-radius:10px; font-size:14px; font-family:inherit; background:#f8f9fa; }
+.fg input:focus,.fg textarea:focus,.fg select:focus { outline:none; border-color:#4f6df5; background:#fff; }
+.opt { display:flex; align-items:center; gap:10px; margin-bottom:8px; padding:10px; border:1px solid #e0e0e0; border-radius:10px; background:#f8f9fa; cursor:pointer; }
+.opt input { margin:0; width:auto; flex-shrink:0; }
+.opt span { flex:1; font-size:14px; color:#333; }
+.btn { width:100%; padding:16px; background:linear-gradient(135deg,#4f6df5,#3b5bdb); color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; font-family:inherit; margin-top:10px; }
+.btn:active { transform:scale(0.98); }
+.ok { color:#28a745; font-size:14px; text-align:center; margin-top:14px; display:none; font-weight:600; }
+.err { color:#dc3545; font-size:13px; text-align:center; margin-top:10px; display:none; font-weight:500; }
+.ld { display:none; text-align:center; padding:20px; }
+.spin { width:40px; height:40px; border:4px solid #e0e0e0; border-top:4px solid #4f6df5; border-radius:50%; animation:sp 1s linear infinite; margin:0 auto 10px; }
+@keyframes sp { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="ld" id="loading"><div class="spin"></div><p>Form load ho raha hai...</p></div>
+
+<div class="card" id="card">
+  <div class="header">
+    <div class="logo"><i class="fas fa-clipboard-list"></i></div>
+    <h1 id="formTitle">TSP Feedback Form</h1>
+    <p id="formSubtitle">Kripya neeche diye gaye sawalon ka jawab dein</p>
+  </div>
+  <div class="desc" id="formDesc">Aapka feedback hamare liye bahut mahatvapurn hai.</div>
+
+  <form id="formEl">
+    <div id="questionsArea"></div>
+    <button class="btn" type="submit" id="submitBtn"><i class="fas fa-paper-plane"></i> Form Submit Karein</button>
+  </form>
+
+  <div class="ok" id="success">Form safaltapurvak submit ho gaya! Dhanyavad.</div>
+  <div class="err" id="error"></div>
+</div>
+
+<script>
+// ========== PRE-BUILT FORM DATA (6 sawal + 2 images) ==========
+const formInfo = {
+  title: "TSP Feedback Form",
+  description: "Kripya neeche diye gaye sawalon ka jawab dein",
+  color: "#4f6df5",
+  logoImg: "",
+  headerImg: "https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=400",
+  footerImg: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400",
+  successMsg: "Form safaltapurvak submit ho gaya! Dhanyavad.",
+  questions: [
+    { text: "Aapka naam kya hai?", type: "text", img: "", options: [] },
+    { text: "Aapki umar kya hai?", type: "text", img: "", options: [] },
+    { text: "Aapne kahan se suna hamare baare mein?", type: "multiple", img: "https://images.unsplash.com/photo-1434030221681-599fd28ac2b8?w=300", options: ["Facebook","Instagram","WhatsApp","Doston se"] },
+    { text: "Hamari service se kitne khush hain (1-5)?", type: "multiple", img: "", options: ["1 - Bahut kharab","2 - Kharab","3 - Theek hai","4 - Achha","5 - Utkrisht"] },
+    { text: "Kya aap humein doosron ko recommend karenge?", type: "multiple", img: "", options: ["Haan","Nahi","Shayad"] },
+    { text: "Koi aur sujhav ya comment?", type: "paragraph", img: "", options: [] }
+  ]
+};
+
+function esc(t){ const d=document.createElement("div"); d.textContent=t; return d.innerHTML; }
+
+function loadForm(){
+  const card=document.getElementById("card");
+  const loading=document.getElementById("loading");
+  const qArea=document.getElementById("questionsArea");
+
+  document.getElementById("formTitle").textContent = formInfo.title;
+  document.getElementById("formSubtitle").textContent = formInfo.description;
+  document.getElementById("formDesc").textContent = formInfo.description;
+  document.getElementById("formDesc").style.display = "block";
+  if(formInfo.logoImg){
+    const lg=document.querySelector('.logo'); lg.innerHTML=''; lg.style.background='transparent'; lg.style.boxShadow='none'; lg.style.padding='0';
+    const im=document.createElement('img'); im.src=formInfo.logoImg; im.style.width='70px'; im.style.height='70px'; im.style.objectFit='contain'; im.style.borderRadius='14px'; im.onerror=function(){this.style.display='none';}; lg.appendChild(im);
+  }
+
+  // Rang
+  document.documentElement.style.setProperty("--primary", formInfo.color);
+
+  // Header image (upar)
+  if(formInfo.headerImg){
+    const hd=document.createElement("img");
+    hd.src=formInfo.headerImg;
+    hd.className="qimg";
+    hd.alt="Form header";
+    hd.onerror=function(){ this.style.display="none"; };
+    document.getElementById("formDesc").insertAdjacentElement("afterend", hd);
+  }
+
+  // 6 Sawal
+  let html="";
+  formInfo.questions.forEach((q,i)=>{
+    html += `<div class="qbox">
+      <span class="qnum">Sawal ${i+1}</span>
+      <div class="qtext">${esc(q.text)}</div>`;
+    if(q.img){ html += `<img class="qimg" src="${esc(q.img)}" alt="Question image" onerror="this.style.display='none'">`; }
+    html += `<div class="qtype">${q.type==="text"?"Short Answer":q.type==="paragraph"?"Long Answer":"Multiple Choice"}</div>`;
+    if(q.type==="text"){
+      html += `<div class="fg"><input type="text" name="a${i}" placeholder="Apna jawab likhein" required></div>`;
+    } else if(q.type==="paragraph"){
+      html += `<div class="fg"><textarea name="a${i}" rows="3" placeholder="Apna jawab likhein" required></textarea></div>`;
+    } else if(q.type==="multiple"){
+      (q.options||[]).forEach((opt,oi)=>{
+        html += `<label class="opt"><input type="radio" name="a${i}" value="${esc(opt)}" required> <span>${esc(opt)}</span></label>`;
+      });
+    }
+    html += `</div>`;
+  });
+  qArea.innerHTML = html;
+
+  // Footer image (neeche)
+  if(formInfo.footerImg){
+    const fd=document.createElement("img");
+    fd.src=formInfo.footerImg;
+    fd.className="qimg";
+    fd.alt="Form footer";
+    fd.style.marginTop="16px";
+    fd.onerror=function(){ this.style.display="none"; };
+    qArea.insertAdjacentElement("afterend", fd);
+  }
+
+  loading.style.display="none";
+  card.style.display="block";
+}
+
+let _submitting=false;
+function submitForm(e){
+  e.preventDefault();
+  if(_submitting) return; _submitting=true;
+  const btn=document.getElementById("submitBtn");
+  const err=document.getElementById("error");
+  const succ=document.getElementById("success");
+  const formEl=document.getElementById("formEl");
+
+  btn.disabled=true;
+  err.style.display="none";
+  succ.style.display="none";
+
+  const fd=new FormData(formEl);
+  const answers={};
+  for(let [k,v] of fd.entries()) answers[k]=v;
+
+  const subId='sub_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  const submission={
+    submissionId: subId,
+    formTitle: formInfo.title,
+    questionLabels: (formInfo.questions||[]).map((q,i)=>q.text||('Sawal '+(i+1))),
+    answers: answers,
+    submittedAt: new Date().toISOString(),
+    source: "public_form"
+  };
+
+  try{
+    let subs = JSON.parse(localStorage.getItem("tsp_form_subs") || "[]");
+    subs.push(submission);
+    localStorage.setItem("tsp_form_subs", JSON.stringify(subs));
+  }catch(err){ console.log("localStorage error:", err); }
+
+  try{
+    if(window.firebase && firebase.firestore){
+      const db=firebase.firestore();
+      db.collection("form_submissions").doc(subId).set(submission,{merge:true}).catch(e=>console.log("Firebase save error:", e));
+    }
+  }catch(err){ console.log("Firebase error:", err); }
+
+  formEl.style.display="none";
+  btn.style.display="none";
+  succ.textContent = formInfo.successMsg || "Form safaltapurvak submit ho gaya! Dhanyavad.";
+  succ.style.display="block";
+}
+
+document.getElementById("formEl").onsubmit = submitForm;
+window.onload = loadForm;
+</script>
+</body>
+</html>
